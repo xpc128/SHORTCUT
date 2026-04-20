@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Premium Data Extractor - Bank Colored</title>
     <style>
-        /* --- CSS SECTION --- */
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --accent-purple: #9d50bb;
@@ -28,9 +28,9 @@
             background: var(--glass);
             padding: 40px;
             border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         header {
@@ -114,6 +114,7 @@
             font-size: 14px;
         }
 
+        /* Bank Badge Style */
         .bank-badge {
             display: inline-block;
             padding: 6px 12px;
@@ -122,58 +123,65 @@
             font-size: 11px;
             color: white;
             text-transform: uppercase;
-            min-width: 80px;
-            text-align: center;
         }
 
-        .user-id { font-weight: 700; color: #6c5ce7; }
-        .nominal { font-weight: 700; color: #2d3436; font-family: monospace; }
+        .user-id {
+            font-weight: 700;
+            color: #6c5ce7;
+        }
+
+        .nominal {
+            font-weight: 700;
+            color: #2d3436;
+            font-family: monospace;
+        }
     </style>
 </head>
+
 <body>
 
-<div class="container">
-    <header>
-        <h2>SHORTCUT W3D IT</h2>
-        <p style="color: #636e72;">Filter otomatis dengan identitas warna bank.</p>
-    </header>
+    <div class="container">
+        <header>
+            <h2>Premium Data Extractor</h2>
+            <p style="color: #636e72;">Filter otomatis dengan identitas warna bank.</p>
+        </header>
 
-    <textarea id="inputArea" placeholder="Tempel data transaksi di sini..."></textarea>
-    
-    <button class="btn-copy" onclick="copyForSheet()">✨ Salin ke Spreadsheet</button>
+        <textarea id="inputArea" placeholder="Tempel data transaksi di sini..."></textarea>
 
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Bank</th>
-                    <th>No. Rekening</th>
-                    <th>User ID</th>
-                    <th>Nama Pemilik</th>
-                    <th>Nominal</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
+        <button class="btn-copy" onclick="copyForSheet()">✨ Salin ke Spreadsheet</button>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Bank</th>
+                        <th>No. Rekening</th>
+                        <th>User ID</th>
+                        <th>Nama Pemilik</th>
+                        <th>Nominal</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
     </div>
-</div>
 
-<script>
-    /* --- JS SECTION --- */
-    const inputArea = document.getElementById('inputArea');
+    <script>
+        const inputArea = document.getElementById('inputArea');
     const tableBody = document.getElementById('tableBody');
 
+    // Fungsi untuk menentukan warna badge berdasarkan nama bank
     function getBankStyle(bankName) {
         const name = bankName.toUpperCase();
-        if (name.includes("DANA")) return "background: #118eea;";
-        if (name.includes("MANDIRI")) return "background: #003d79;";
-        if (name.includes("BRI")) return "background: #00529c;";
-        if (name.includes("BCA")) return "background: #0060ad;";
-        if (name.includes("BNI")) return "background: #ff6600;";
-        if (name.includes("CIMB")) return "background: #ed1c24;";
-        if (name.includes("OVO")) return "background: #4c2a86;";
-        if (name.includes("GOPAY")) return "background: #00aa13;";
-        return "background: #636e72;";
+        if (name.includes("DANA")) return "background: #118eea;"; // Biru Dana
+        if (name.includes("MANDIRI")) return "background: #003d79;"; // Biru Tua Mandiri
+        if (name.includes("BRI")) return "background: #00529c;"; // Biru BRI
+        if (name.includes("BCA")) return "background: #0060ad;"; // Biru BCA
+        if (name.includes("BNI")) return "background: #ff6600;"; // Oranye BNI
+        if (name.includes("CIMB")) return "background: #ed1c24;"; // Merah CIMB
+        if (name.includes("OVO")) return "background: #4c2a86;"; // Ungu OVO
+        if (name.includes("GOPAY")) return "background: #00aa13;"; // Hijau GoPay
+        return "background: #636e72;"; // Abu-abu default
     }
 
     inputArea.addEventListener('input', function() {
@@ -187,8 +195,7 @@
             let currentPart = parts[i].trim();
             let nextPart = parts[i+1].trim();
 
-            let userIdLines = currentPart.split('\n');
-            let userIdRaw = userIdLines[userIdLines.length - 1].trim();
+            let userIdRaw = currentPart.split('\n').pop().trim();
             let userId = userIdRaw.replace(/^\d+/, '').replace(/"/g, ''); 
 
             let nominalMatch = nextPart.match(/(\d{1,3}(,\d{3})+)/);
@@ -218,13 +225,11 @@
     function copyForSheet() {
         let output = "";
         const rows = tableBody.querySelectorAll('tr');
-        if (rows.length === 0) {
-            alert("Tidak ada data untuk disalin!");
-            return;
-        }
+        if (rows.length === 0) return;
 
         rows.forEach(row => {
             const cols = row.querySelectorAll('td');
+            // Untuk kolom Bank, kita ambil innerText-nya saja (teks dalam badge)
             const rowData = Array.from(cols).map(c => c.innerText.replace(/"/g, '').trim()).join('\t');
             output += rowData + '\n';
         });
@@ -235,9 +240,10 @@
         tempInput.select();
         document.execCommand('copy');
         document.body.removeChild(tempInput);
-        alert("✨ Data premium tersalin! Silakan paste di Spreadsheet.");
+        alert("✨ Data premium tersalin!");
     }
-</script>
+    </script>
 
 </body>
+
 </html>

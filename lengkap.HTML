@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Data Extractor - Bank Colored</title>
+    <style>
+        /* --- CSS SECTION --- */
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --accent-purple: #9d50bb;
+            --dark-purple: #2d3436;
+            --glass: rgba(255, 255, 255, 0.95);
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+            background-attachment: fixed;
+            margin: 0;
+            padding: 40px 20px;
+            color: var(--dark-purple);
+        }
+
+        .container {
+            max-width: 1150px;
+            margin: auto;
+            background: var(--glass);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            font-size: 28px;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 140px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 16px;
+            font-size: 15px;
+            margin-bottom: 25px;
+            box-sizing: border-box;
+            outline: none;
+            transition: all 0.3s ease;
+            background: #fcfcfc;
+        }
+
+        textarea:focus {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 4px rgba(157, 80, 187, 0.1);
+        }
+
+        .btn-copy {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            display: block;
+            margin: 0 auto 40px auto;
+            transition: 0.3s;
+            box-shadow: 0 10px 20px rgba(118, 75, 162, 0.3);
+        }
+
+        .btn-copy:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px rgba(118, 75, 162, 0.4);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 16px;
+            border: 1px solid #eee;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th {
+            background: #f8f9fa;
+            color: #764ba2;
+            padding: 18px;
+            text-align: left;
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        td {
+            padding: 16px 18px;
+            border-bottom: 1px solid #f1f1f1;
+            font-size: 14px;
+        }
+
+        .bank-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 11px;
+            color: white;
+            text-transform: uppercase;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .user-id { font-weight: 700; color: #6c5ce7; }
+        .nominal { font-weight: 700; color: #2d3436; font-family: monospace; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h2>Premium Data Extractor</h2>
+        <p style="color: #636e72;">Filter otomatis dengan identitas warna bank.</p>
+    </header>
+
+    <textarea id="inputArea" placeholder="Tempel data transaksi di sini..."></textarea>
+    
+    <button class="btn-copy" onclick="copyForSheet()">✨ Salin ke Spreadsheet</button>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Bank</th>
+                    <th>No. Rekening</th>
+                    <th>User ID</th>
+                    <th>Nama Pemilik</th>
+                    <th>Nominal</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    /* --- JS SECTION --- */
+    const inputArea = document.getElementById('inputArea');
+    const tableBody = document.getElementById('tableBody');
+
+    function getBankStyle(bankName) {
+        const name = bankName.toUpperCase();
+        if (name.includes("DANA")) return "background: #118eea;";
+        if (name.includes("MANDIRI")) return "background: #003d79;";
+        if (name.includes("BRI")) return "background: #00529c;";
+        if (name.includes("BCA")) return "background: #0060ad;";
+        if (name.includes("BNI")) return "background: #ff6600;";
+        if (name.includes("CIMB")) return "background: #ed1c24;";
+        if (name.includes("OVO")) return "background: #4c2a86;";
+        if (name.includes("GOPAY")) return "background: #00aa13;";
+        return "background: #636e72;";
+    }
+
+    inputArea.addEventListener('input', function() {
+        const val = this.value.trim();
+        if (!val) { tableBody.innerHTML = ""; return; }
+
+        const parts = val.split(/Withdraw/g);
+        tableBody.innerHTML = "";
+
+        for (let i = 0; i < parts.length - 1; i++) {
+            let currentPart = parts[i].trim();
+            let nextPart = parts[i+1].trim();
+
+            let userIdLines = currentPart.split('\n');
+            let userIdRaw = userIdLines[userIdLines.length - 1].trim();
+            let userId = userIdRaw.replace(/^\d+/, '').replace(/"/g, ''); 
+
+            let nominalMatch = nextPart.match(/(\d{1,3}(,\d{3})+)/);
+            let nominal = nominalMatch ? nominalMatch[1].replace(/"/g, '') : "-";
+
+            let bankDataMatch = nextPart.match(/G\d+(.*?),\s*([\d\*]+),\s*([^0-9\n\r]+)/);
+            
+            let bank = "-", rek = "-", nama = "-";
+            if (bankDataMatch) {
+                bank = bankDataMatch[1].trim().replace(/"/g, '');
+                rek = bankDataMatch[2].trim().replace(/"/g, '');
+                nama = bankDataMatch[3].replace(/\d+$/, '').trim().replace(/"/g, ''); 
+            }
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><span class="bank-badge" style="${getBankStyle(bank)}">${bank}</span></td>
+                <td>${rek}</td>
+                <td class="user-id">${userId}</td>
+                <td>${nama}</td>
+                <td class="nominal">${nominal}</td>
+            `;
+            tableBody.appendChild(tr);
+        }
+    });
+
+    function copyForSheet() {
+        let output = "";
+        const rows = tableBody.querySelectorAll('tr');
+        if (rows.length === 0) {
+            alert("Tidak ada data untuk disalin!");
+            return;
+        }
+
+        rows.forEach(row => {
+            const cols = row.querySelectorAll('td');
+            const rowData = Array.from(cols).map(c => c.innerText.replace(/"/g, '').trim()).join('\t');
+            output += rowData + '\n';
+        });
+
+        const tempInput = document.createElement('textarea');
+        tempInput.value = output;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        alert("✨ Data premium tersalin! Silakan paste di Spreadsheet.");
+    }
+</script>
+
+</body>
+</html>
